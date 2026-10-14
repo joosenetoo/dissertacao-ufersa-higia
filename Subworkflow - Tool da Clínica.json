@@ -1,0 +1,614 @@
+{
+  "name": "Subworkflow - Tool da Clínica",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "operation",
+              "type": "any"
+            },
+            {
+              "name": "cpf",
+              "type": "any"
+            },
+            {
+              "name": "date",
+              "type": "any"
+            },
+            {
+              "name": "exam_id",
+              "type": "any"
+            },
+            {
+              "name": "sessionId",
+              "type": "any"
+            },
+            {
+              "name": "patient_cpf_test",
+              "type": "any"
+            },
+            {
+              "name": "patient_id_test",
+              "type": "any"
+            },
+            {
+              "name": "medico_id_test",
+              "type": "any"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        192
+      ],
+      "id": "a4dc22a9-ef5f-47b3-a0ca-6edc02d5a56a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{\n  {\n    operation: String($json.operation ?? 'get_patient_by_cpf')\n  .trim()\n  .replace(/\\r?\\n/g, ''),\n    params: {\n      cpf: $json.cpf || $json.params?.cpf || $json.patient_cpf_test || '12345678901',\n      date: $json.date || $json.params?.date || new Date().toISOString().slice(0,10),\n      exam_id: ($json.exam_id ?? $json.params?.exam_id) ?? null,\n    },\n    sessionId: $json.sessionId || null,\n    test: {\n      patient_id: $json.patient_id_test ?? null,\n      medico_id: $json.medico_id_test ?? null,\n    }\n  }\n}}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -432,
+        192
+      ],
+      "id": "4362c5ef-b3fa-4e40-85e4-fd68d16e6433",
+      "name": "Normalizar Entrada"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "4f61ce7c-73b0-4dc6-ab9e-48d8c4a7776c",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "get_patient_by_cpf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "79014119-c04b-4745-951e-8591bcfcfbc0",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "list_upcoming_consultas_by_patient_cpf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "629ac9cc-f6ad-4a2e-9c5a-0549f1363001",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "list_consultas_by_date",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "3c2872a4-9fe2-4b74-8964-5fa3d3807d0e",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "list_exams_by_patient_cpf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "ac50bc28-0e9b-49b7-a6b7-17451ab44bf3",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "get_exam_by_id",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "4cb7165e-2af5-432b-bdbc-c0f4bb84b348",
+                    "leftValue": "={{ $json.operation }}",
+                    "rightValue": "list_all_consultas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        16,
+        -32
+      ],
+      "id": "e6a74400-b28b-4eb1-9a7e-48184cfb85bc",
+      "name": "Switch (operation)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const op = String(\n  $('Normalizar Entrada').first().json.operation ?? ''\n)\n  .trim()\n  .replace(/\\r?\\n/g, '');\n\nconst data = $input.all().map(i => i.json);\n\nreturn [\n  {\n    json: {\n      ok: true,\n      operation: op,\n      count: data.length,\n      data\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        128
+      ],
+      "id": "a31f6c4f-bc73-4764-bcd9-e0ec0dacd3da",
+      "name": "Padronizar Saída"
+    },
+    {
+      "parameters": {
+        "jsCode": "const op = String($json.operation ?? '').trim().replace(/\\r?\\n/g, '');\n\nreturn [\n  {\n    json: {\n      ok: false,\n      operation: op,\n      error: op === \"get_exam_by_id\"\n        ? \"Para consultar um exame específico, informe o exam_id.\"\n        : \"Operação inválida ou não suportada.\",\n      allowed_operations: [\n        \"get_patient_by_cpf\",\n        \"list_upcoming_consultas_by_patient_cpf\",\n        \"list_consultas_by_date\",\n        \"list_exams_by_patient_cpf\",\n        \"get_exam_by_id\",\n        \"list_all_consultas\"\n      ]\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        880
+      ],
+      "id": "67ddec37-97d5-4894-8959-9b5485c54d45",
+      "name": "Operação Inválida"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, nome, cpf, data_nascimento, telefone, email, created_at, updated_at\nFROM pacientes\nWHERE cpf = '{{ $json.params.cpf }}'\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        -320
+      ],
+      "id": "bbf1d2f7-11ff-4d93-9b20-cf3635af1079",
+      "name": "get_patient_by_cpf",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  c.id AS consulta_id,\n  c.inicio,\n  c.fim,\n  c.status,\n  c.motivo,\n  c.observacoes,\n\n  p.id AS paciente_id,\n  p.nome AS paciente_nome,\n  p.cpf AS paciente_cpf,\n\n  m.id AS medico_id,\n  m.nome AS medico_nome,\n  m.especialidade,\n\n  f.id AS atendente_id,\n  f.nome AS atendente_nome\n\nFROM consultas c\nJOIN pacientes p ON p.id = c.paciente_id\nJOIN medicos m ON m.id = c.medico_id\nLEFT JOIN funcionarios f ON f.id = c.atendente_id\n\nWHERE p.cpf = '{{ $json.params.cpf }}'\n  AND c.inicio >= CONCAT(CURDATE(), ' 00:00:00')\n\nORDER BY c.inicio ASC\nLIMIT 20;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        -128
+      ],
+      "id": "802639e0-c2f9-42d0-a405-28b6926011b9",
+      "name": "list_upcoming_consultas_by_patient_cpf",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  e.id AS exame_id,\n  e.status,\n  e.nome_exame,\n  e.laboratorio,\n  e.data_solicitacao,\n  e.data_realizacao,\n  e.resultado_resumo,\n  e.url_laudo,\n  m.nome AS medico_nome,\n  c.id AS consulta_id,\n  c.inicio AS consulta_inicio\nFROM exames_paciente e\nJOIN pacientes p ON p.id = e.paciente_id\nLEFT JOIN medicos m ON m.id = e.medico_id\nLEFT JOIN consultas c ON c.id = e.consulta_id\nWHERE p.cpf = '{{ $json.params.cpf }}'\nORDER BY e.data_realizacao DESC, e.id DESC\nLIMIT 50;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        272
+      ],
+      "id": "1f7d948d-d502-4e21-bd4e-95cdc0d4223c",
+      "name": "list_exams_by_patient_cpf",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  e.id AS exame_id,\n  e.status,\n  e.nome_exame,\n  e.laboratorio,\n  e.data_solicitacao,\n  e.data_realizacao,\n  e.resultado_resumo,\n  e.laudo_texto,\n  e.url_laudo,\n  p.id AS paciente_id,\n  p.nome AS paciente_nome,\n  p.cpf AS paciente_cpf,\n  m.nome AS medico_nome\nFROM exames_paciente e\nJOIN pacientes p ON p.id = e.paciente_id\nLEFT JOIN medicos m ON m.id = e.medico_id\nWHERE e.id = {{ $json.params.exam_id }}\nLIMIT 1;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        464
+      ],
+      "id": "9dfeac2f-eb6c-43f3-9bc0-107dd356deb9",
+      "name": "get_exam_by_id",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0916e7e9-c897-43ae-a55b-b8e1dfd72987",
+              "leftValue": "={{ $json.operation === 'get_exam_by_id' && ($json.params.exam_id === null || $json.params.exam_id === undefined) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        192
+      ],
+      "id": "95b45e06-fa68-4ce6-88cd-06d1c9bc87a4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  c.id AS consulta_id,\n  c.inicio,\n  c.fim,\n  c.status,\n  c.motivo,\n  p.nome AS paciente_nome,\n  p.cpf AS paciente_cpf,\n  m.nome AS medico_nome,\n  m.especialidade,\n  f.nome AS atendente_nome\nFROM consultas c\nJOIN pacientes p ON p.id = c.paciente_id\nJOIN medicos m ON m.id = c.medico_id\nLEFT JOIN funcionarios f ON f.id = c.atendente_id\nWHERE DATE(c.inicio) = '{{ $json.params.date }}'\nORDER BY c.inicio ASC\nLIMIT 50;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        96
+      ],
+      "id": "cc4f5457-d50b-475d-ba45-764b7d771666",
+      "name": "list_consultas_by_date",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  c.id AS consulta_id,\n  c.inicio,\n  c.fim,\n  c.status,\n  c.motivo,\n  c.observacoes,\n  c.queixa_principal,\n  c.anamnese,\n  c.hipotese_diagnostica,\n  c.conduta,\n  p.id AS paciente_id,\n  p.nome AS paciente_nome,\n  p.cpf AS paciente_cpf,\n  m.id AS medico_id,\n  m.nome AS medico_nome,\n  m.especialidade,\n  f.id AS atendente_id,\n  f.nome AS atendente_nome\nFROM consultas c\nJOIN pacientes p ON p.id = c.paciente_id\nJOIN medicos m ON m.id = c.medico_id\nLEFT JOIN funcionarios f ON f.id = c.atendente_id\nORDER BY c.inicio DESC\nLIMIT 100;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        400,
+        672
+      ],
+      "id": "aa9b95d9-aff5-4ca4-8aa6-e71006227100",
+      "name": "list_all_consultation",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Subworkflow Integração",
+        "height": 1424,
+        "width": 1824,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -368
+      ],
+      "id": "bad6c233-bc9c-45fb-9473-0e1b0c6c5a35",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Normalizar Entrada": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_patient_by_cpf": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch (operation)": {
+      "main": [
+        [
+          {
+            "node": "get_patient_by_cpf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "list_upcoming_consultas_by_patient_cpf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "list_consultas_by_date",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "list_exams_by_patient_cpf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "get_exam_by_id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "list_all_consultation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Operação Inválida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_upcoming_consultas_by_patient_cpf": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_exams_by_patient_cpf": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_exam_by_id": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Operação Inválida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch (operation)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operação Inválida": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_consultas_by_date": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list_all_consultation": {
+      "main": [
+        [
+          {
+            "node": "Padronizar Saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b88c5059-0da2-420f-a42a-7f664d4800fa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0dd13791ed1aceffba8aa7318e026265c85178b6c713eb0728b8f749ecc5f9ea"
+  },
+  "id": "c4ofciB0mUlYMpQa",
+  "tags": []
+}

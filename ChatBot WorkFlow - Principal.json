@@ -1,0 +1,2310 @@
+{
+  "name": "ChatBot WorkFlow - Principal",
+  "nodes": [
+    {
+      "parameters": {
+        "inputDataFieldName": "file0",
+        "name": "=[{{ $json.body.title + \", \" + $json.body.type + \", \"  + $json.body.source + \", \" + $json.body.area + \", \" + $json.body.year}}]{{$binary.file0.fileName}}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV",
+          "mode": "list",
+          "cachedResultName": "base-conhecimento",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -560,
+        368
+      ],
+      "id": "b587bc8f-c4cb-48dd-a321-5bfd348e85a5",
+      "name": "Salvar arquivo no Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BTxordBlr2UVMN5Z",
+          "name": "Google Drive account 2 Neto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      title: $json.body.title,\n      type: $json.body.type,\n      source: $json.body.source,\n      area: $json.body.area,\n      year: parseInt($json.body.year),\n      version: parseInt($json.body.version),\n      notes: $json.body.notes\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        176
+      ],
+      "id": "2db0ba55-1bf0-4df1-9d04-ff971c4bc60d",
+      "name": "Mapear Dados Formulário"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -336,
+        272
+      ],
+      "id": "719378cd-53d5-424a-8eac-52b0dea78a48",
+      "name": "Combinar dados"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Função UUID compatível com n8n\nfunction uuidv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nreturn [\n  {\n    json: {\n      // ID interno do documento\n      id: uuidv4(),\n\n      // ===== METADADOS DO FORMULÁRIO =====\n      title: $json.title,\n      type: $json.type,\n      source: $json.source,\n      area: $json.area,\n      year: $json.year ? parseInt($json.year) : null,\n      version: $json.version ? parseInt($json.version) : 1,\n      notes: $json.notes || null,\n\n      // ===== DADOS DO GOOGLE DRIVE =====\n      file_name: $json.name,\n      drive_file_id: $json.id,\n      drive_url: $json.webViewLink,\n      mime_type: $json.mimeType || null,\n\n      // ===== CONTROLE DO SISTEMA =====\n      status: 'INDEXING',\n      created_at: new Date().toISOString()\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        272
+      ],
+      "id": "5e4b8336-0580-4229-b503-657a26365589",
+      "name": "Mapear Dados do Formulario+Drive"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO documents (\n  id,\n  title,\n  type,\n  source,\n  area,\n  year,\n  version,\n  notes,\n  file_name,\n  drive_file_id,\n  drive_url,\n  mime_type,\n  status,\n  created_at\n) VALUES (\n  '{{$json.id}}',\n  '{{$json.title}}',\n  '{{$json.type}}',\n  '{{$json.source}}',\n  '{{$json.area}}',\n  {{$json.year}},\n  {{$json.version}},\n  {{$json.notes ? `'${$json.notes}'` : 'NULL'}},\n  '{{$json.file_name}}',\n  '{{$json.drive_file_id}}',\n  '{{$json.drive_url}}',\n  '{{$json.mime_type}}',\n  '{{$json.status}}',\n  '{{$json.created_at}}'\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        272
+      ],
+      "id": "f92bf1f9-3248-4e6d-9fb0-ae7f58000488",
+      "name": "Inserir Dados do Documento no BD",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Inserir arquivos no Google Drive\n",
+        "height": 432,
+        "width": 1184,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        112
+      ],
+      "id": "8d2b57e4-f111-4319-8d7c-c93e6cd2c75b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const where = [];\nconst query = $json.query || {};\n\nif (query.type) {\n  where.push(`type = '${query.type}'`);\n}\n\nif (query.area) {\n  where.push(`area = '${query.area}'`);\n}\n\nif (query.status) {\n  where.push(`status = '${query.status}'`);\n}\n\nconst whereClause = where.length\n  ? `WHERE ${where.join(' AND ')}`\n  : '';\n\nreturn [\n  {\n    json: {\n      whereClause\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        1184
+      ],
+      "id": "5e9dbfe2-e7f9-4935-a252-37cfc16a9385",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  id,\n  title,\n  type,\n  source,\n  area,\n  year,\n  version,\n  notes,\n  file_name,\n  drive_file_id,\n  drive_url,\n  status,\n  created_at\nFROM documents\n{{$json.whereClause}}\nORDER BY created_at DESC;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -352,
+        1184
+      ],
+      "id": "2c837834-d1ff-449e-b4a9-08f092916797",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -128,
+        1184
+      ],
+      "id": "5b9cfbea-09cd-40c6-8c2b-866354d1825c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ingest-document",
+        "options": {
+          "allowedOrigins": "*",
+          "binaryPropertyName": "file"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        272
+      ],
+      "id": "ffa46cf2-10b6-483a-bbeb-628736f7087b",
+      "name": "Inserir Doc",
+      "webhookId": "5bc8a3fd-a23e-4c9d-b385-fa4534e8e64c"
+    },
+    {
+      "parameters": {
+        "path": "documents",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        1184
+      ],
+      "id": "dfba3f58-c7ff-4c8a-b2e4-e2aeeb2aae46",
+      "name": "Get Doc",
+      "webhookId": "aa3c716a-4297-4dd2-8b80-a94b589d77fb"
+    },
+    {
+      "parameters": {
+        "content": "## Recuperar lista de documentos",
+        "height": 256,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1088
+      ],
+      "id": "6e693903-e713-4263-9d01-5b56edbbafa0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV",
+          "mode": "list",
+          "cachedResultName": "base-conhecimento",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        672
+      ],
+      "id": "b3018d74-fd67-4253-9edf-35b276c9528b",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BTxordBlr2UVMN5Z",
+          "name": "Google Drive account 2 Neto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        672
+      ],
+      "id": "e5013796-f7f9-4a2d-9dfc-13f10350972c",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "fileId",
+                "value": "={{ $json.id }}"
+              },
+              {
+                "name": "=title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "type",
+                "value": "={{ $json.type }}"
+              },
+              {
+                "name": "fonte",
+                "value": "={{ $json.source }}"
+              },
+              {
+                "name": "area",
+                "value": "={{ $json.area }}"
+              },
+              {
+                "name": "ano",
+                "value": "={{ $json.year }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        896
+      ],
+      "id": "731cc363-3184-47af-a178-0ebb0571bdcc",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        896
+      ],
+      "id": "43a0cbf9-41f6-496f-a3af-b32b34e65219",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "8Qqwjs4zHnZn0Gmw",
+          "name": "base"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        16,
+        672
+      ],
+      "id": "366dd1bf-44e7-47a4-a983-295739ae5121",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "application/pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -432,
+        672
+      ],
+      "id": "0844b723-cc47-4652-a723-d24c2340a077",
+      "name": "Download Arquivo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BTxordBlr2UVMN5Z",
+          "name": "Google Drive account 2 Neto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Nome original do arquivo\nconst fullName = $json.name;\n\n// Regex para capturar o conteúdo entre [ ]\nconst match = fullName.match(/\\[(.*?)\\]/);\n\nif (!match) {\n  throw new Error('Nome do arquivo não segue o padrão esperado');\n}\n\n// Divide os metadados\nconst parts = match[1].split(',').map(p => p.trim());\n\nreturn [\n  {\n    json: {\n      // Metadados extraídos\n      title: parts[0] || null,\n      type: parts[1] || null,\n      source: parts[2] || null,\n      area: parts[3] || null,\n      year: parts[4] ? parseInt(parts[4]) : null,\n\n      // Nome do arquivo\n      file_name: fullName,\n\n      // Opcional: nome limpo para exibição\n      clean_title: parts[0],\n\n      // Debug opcional\n      raw_metadata: parts\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        608
+      ],
+      "id": "92f4b1f9-1e88-41ca-a23e-56e1b9dec07a",
+      "name": "Extrair Metadata"
+    },
+    {
+      "parameters": {
+        "content": "## Inserir arquivos na Base de Conhecimento\n",
+        "height": 480,
+        "width": 1552,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        560
+      ],
+      "id": "9964b96a-9218-45fb-9108-e1c6d143926a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "documents",
+        "filterType": "string",
+        "filterString": "=select id, metadata->>file_id as file_id\nfrom documents;\n"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        112,
+        1408
+      ],
+      "id": "1cda0d89-6494-4289-a568-43ee5c19f8db",
+      "name": "Get many rows1",
+      "executeOnce": true,
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $items(\"Search files and folders\");\n\nconst driveIds = files\n  .map(item => item.json.id)\n  .filter(Boolean);\n\nreturn [\n  {\n    json: {\n      driveIds\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        1408
+      ],
+      "id": "0043bbc6-cdf1-4663-b9c1-853a6dc2cd51",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1️⃣ Buscar os IDs vindos do Drive\nconst driveIdsItem = $items(\"Code in JavaScript1\")[0];\nconst driveIds = driveIdsItem?.json?.driveIds ?? [];\n\n// 2️⃣ Buscar registros do Supabase\nconst dbRows = $items(\"Get many rows1\");\n\n// 3️⃣ Definir quais linhas devem ser deletadas\nlet rowsToDelete = [];\n\n// SE DRIVE VAZIO → APAGA TUDO\nif (driveIds.length === 0) {\n  rowsToDelete = dbRows;\n} else {\n  rowsToDelete = dbRows.filter(row => {\n    const fileId = row.json.file_id; // campo correto vindo do select\n    return fileId && !driveIds.includes(fileId);\n  });\n}\n\n// 4️⃣ Retorna APENAS IDs válidos (PK)\n// ⚠️ Se não houver nada, retorna [] → próximo node não executa\nreturn rowsToDelete\n  .filter(row => typeof row.json.id === \"number\")\n  .map(row => ({\n    json: {\n      id: row.json.id\n    }\n  }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        1408
+      ],
+      "id": "93cded7a-61bd-49b4-8137-ed0ee377e61d",
+      "name": "Code in JavaScript2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "file_name",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -432,
+        2144
+      ],
+      "id": "c9b3ae9a-1e30-4762-91db-68d560dd9b54",
+      "name": "Select rows from a table",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// fileIds válidos vindos do Supabase\nconst validFileIds =\n  $items(\"Code in JavaScript3\")[0]?.json?.validFileIds ?? [];\n\n// TRAVA DE SEGURANÇA\nif (validFileIds.length === 0) {\n  throw new Error(\"Lista de fileIds vazia — delete bloqueado\");\n}\n\n// registros do MySQL\nconst mysqlRows = items;\n\n// seleciona APENAS os órfãos\nconst rowsToDelete = mysqlRows.filter(row => {\n  const driveId = row.json.drive_file_id;\n  return driveId && !validFileIds.includes(driveId);\n});\n\n// se não houver nada para apagar, encerra limpo\nif (rowsToDelete.length === 0) {\n  return [];\n}\n\n// saída no formato esperado pelo Delete\nreturn rowsToDelete.map(row => ({\n  json: {\n    id: row.json.id\n  }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        2144
+      ],
+      "id": "c95c7dd3-f167-4820-ab2f-019125e3bfd3",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        16,
+        2144
+      ],
+      "id": "93aca0f7-9872-4b33-a2ff-efda3b4c3e17",
+      "name": "Delete table or rows",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// linhas vindas do Supabase\nconst supabaseRows = items;\n\n// extrai os fileIds válidos\nconst validFileIds = supabaseRows\n  .map(r => r.json.metadata?.fileId)\n  .filter(Boolean);\n\n// TRAVA DE SEGURANÇA ABSOLUTA\nif (validFileIds.length === 0) {\n  throw new Error(\"Supabase retornou 0 fileIds — abortando fluxo por segurança\");\n}\n\n// saída única com o array\nreturn [\n  {\n    json: {\n      validFileIds\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        2144
+      ],
+      "id": "fc4eee7c-788a-49e8-a216-03e720244ebf",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "documents",
+        "filterType": "string",
+        "filterString": "select metadata->>'file_id' as file_id from documents;"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        2144
+      ],
+      "id": "6dab77f8-71a9-4f72-81ba-ad456595d36c",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        1504
+      ],
+      "id": "9180165f-3484-4faf-a330-d4717aa6affc",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $items(\"Search files and folders\");\n\nconst driveIds = files\n  .map(item => item.json.id)\n  .filter(Boolean);\n\nreturn [\n  {\n    json: { driveIds }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        1600
+      ],
+      "id": "bb17645b-e39f-40c5-82fa-c9e29f2160e9",
+      "name": "Extrair IDs do Drive"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "file_name",
+              "condition": "IS NOT NULL"
+            }
+          ]
+        },
+        "options": {
+          "outputColumns": [
+            "id",
+            "drive_file_id"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        1600
+      ],
+      "id": "327bb320-5231-432b-ae23-bd5a6e863bd0",
+      "name": "Select rows from a table1",
+      "executeOnce": true,
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const driveIdsItem = $items(\"Extrair IDs do Drive\")[0];\nconst driveIds = driveIdsItem?.json?.driveIds ?? [];\n\nconst dbRows = $items(\"Select rows from a table1\");\n\nlet rowsToDelete;\n\n// SE DRIVE VAZIO → APAGA TUDO\nif (driveIds.length === 0) {\n  rowsToDelete = dbRows;\n} else {\n  rowsToDelete = dbRows.filter(row => {\n    const fileId = row.json.drive_file_id;\n    return fileId && !driveIds.includes(fileId);\n  });\n}\n\nreturn rowsToDelete.map(row => ({\n  json: { id: row.json.id }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        1600
+      ],
+      "id": "a132560d-002e-458c-aaba-b980807e35e5",
+      "name": "Comparar Drive × MySQL",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM documents\nWHERE id = '{{ $json.id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        1600
+      ],
+      "id": "90aa3a12-53bf-499f-916b-510ac87b8b3f",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "documents",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1408
+      ],
+      "id": "07edab0b-a51a-463b-acab-57b2465f218b",
+      "name": "Delete a row",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV",
+            "mode": "list",
+            "cachedResultName": "base-conhecimento",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1TLWh2of3dM5G6mWAPf3ouHSa8hPyQahV"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -560,
+        1504
+      ],
+      "id": "e4a0e409-42f8-4c25-abf3-5026126d0aa3",
+      "name": "Search files and folders",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BTxordBlr2UVMN5Z",
+          "name": "Google Drive account 2 Neto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "sync",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        1504
+      ],
+      "id": "285a905b-15ab-4c3d-8677-2c7d762229fe",
+      "name": "Webhook",
+      "webhookId": "8f4d402a-25a7-49b0-8b90-6bde29339fa2"
+    },
+    {
+      "parameters": {
+        "content": "## Sincronizar base de dados",
+        "height": 368,
+        "width": 1632
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        1392
+      ],
+      "id": "111ca3cd-c0be-4898-8ba9-408c9219cf2c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/documents/delete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -816,
+        1888
+      ],
+      "id": "3fbff5a7-a14d-4940-9c3d-7c503ecdf4ff",
+      "name": "Webhook1",
+      "webhookId": "17cfefda-db25-49b2-b3fa-0bc90e344401"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e13620d-49ab-4134-9003-5f43eb35cee4",
+              "name": "drive_id",
+              "value": "={{ $json.body.drive_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -592,
+        1888
+      ],
+      "id": "de17d062-59f3-410e-9aa6-fbcdb2575594",
+      "name": "Id Doc delete"
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.drive_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -368,
+        1888
+      ],
+      "id": "5ab8c301-9731-4044-870b-a862c5591ae5",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "BTxordBlr2UVMN5Z",
+          "name": "Google Drive account 2 Neto"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Apagar arquivo do Drive (via webhook) e Da tabela de Exibição\n",
+        "height": 560,
+        "width": 1168
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        1792
+      ],
+      "id": "0e0eced1-beb0-49d7-8eef-cdb5736ccdbe",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "chat_configuracoes",
+          "mode": "list",
+          "cachedResultName": "chat_configuracoes"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -336,
+        -1552
+      ],
+      "id": "846d575b-4a44-4ec5-b22f-0d463e5456fc",
+      "name": "Get configurações",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        -1184
+      ],
+      "id": "c2ba02da-ac6b-4e67-b1fb-c89c589fbbb6",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "8Qqwjs4zHnZn0Gmw",
+          "name": "base"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot-frontend",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -784,
+        -1552
+      ],
+      "id": "e42869e0-9dd0-40d1-90c3-c2599bdbcc6b",
+      "name": "Webhook FrontEndChat",
+      "webhookId": "1474f4ed-7084-48cf-8847-edf7c640b881"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "={{ $json.modelo }}",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": "={{ isNaN(parseInt($json.max_tokens, 10)) ? 300 : parseInt($json.max_tokens, 10) }}",
+          "topP": "={{ isNaN(Number($json.top_p)) ? 1 : Number($json.top_p) }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -1328
+      ],
+      "id": "80ec4dac-2566-4e64-8c19-9980a748b0fa",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "8Qqwjs4zHnZn0Gmw",
+          "name": "base"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f2827d3f-bdd7-4ad9-8298-a38c15e04583",
+              "name": "user_message",
+              "value": "={{ $json.body.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "2fddbe7f-9536-41b8-92e2-42c7615c40de",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -560,
+        -1552
+      ],
+      "id": "6d36f243-fee5-45e1-a37e-85a306fbddde",
+      "name": "Mensagem Usuário"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Mensagem Usuário').item.json.sessionId }}",
+        "tableName": "chat_memory",
+        "contextWindowLength": 12
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        -1328
+      ],
+      "id": "8a1ec808-975a-4b24-8a72-5979e7f145d3",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "qYDsWr2UbkDOEPJZ",
+          "name": "Postgres Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "documents",
+        "limit": 2
+      },
+      "id": "72cffbae-41fc-48a7-8f77-c22183568d04",
+      "name": "Keep Supabase Instance Alive",
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        -560,
+        2608
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Optional: Keep the Database Awake\n\n**What it does:** Free Supabase projects \"go to sleep\" after a week of inactivity. This scheduled trigger runs a tiny query every 6 days to keep your database awake and ready.\n**Action:** You can delete this if you have a paid Supabase plan or a self-hosted instance.",
+        "height": 560,
+        "width": 544,
+        "color": 7
+      },
+      "id": "70503237-30f1-4614-a0cf-2fb9e46cf2b2",
+      "name": "Sticky Note22",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        2400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "57b698fa-aa98-42fb-997d-8e1eca17068e",
+      "name": "Every 6 Days",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -784,
+        2704
+      ],
+      "typeVersion": 1.2,
+      "notes": "© 2025 Lucas Peyrin"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "documents",
+        "limit": 1
+      },
+      "id": "6e43e1f2-8de9-47d6-a010-32002f7107d6",
+      "name": "Keep Supabase Instance Alive1",
+      "type": "n8n-nodes-base.supabase",
+      "position": [
+        -560,
+        2800
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "supabaseApi": {
+          "id": "jqIJyIBiohN4Z7WR",
+          "name": "Documentos Conversas"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Base de conhecimento institucional (diretrizes oficiais). Use SEMPRE antes de responder perguntas factuais/condutas/orientações. Se a pergunta for sobre recomendações, protocolos, sintomas, o que fazer, medicamentos, exames, ou termos técnicos, consulte esta base.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        -1328
+      ],
+      "id": "573c0f83-7337-4646-811e-8496058b7509",
+      "name": "Documentos (KB)",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yknELcZH7OiScQc6",
+          "name": "Base de Conhecimento"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Operações permitidas (obrigatório informar operation):\n\nListar dados da paciente:\noperation = get_patient_by_cpf (cpf opcional)\n\nListar próximas consultas ou agendamentos da paciente:\noperation = list_upcoming_consultas_by_patient_cpf (cpf opcional)\n\nListar todas as consultas da paciente por data:\noperation = list_consultas_by_date (date obrigatório YYYY-MM-DD)\n\nListar todas as consultas\noperation = list_all_consultas (cpf obrigatório)\n\nListar todos os exames da paciente:\noperation = list_exams_by_patient_cpf (cpf opcional)\n\nCapturar informações sobre um exame da paciente:\noperation = get_exam_by_id (exam_id obrigatório)\n\nEntradas da ferramenta (campos no topo):\n\n- operation (string)\n- cpf (string opcional)\n- date (string opcional)\n- exam_id (number opcional)\n\nImportante: se cpf não for informado, a ferramenta usará o CPF de teste do contexto (patient_cpf_test).\n\nRetornar dessa forma:\n{\n  \"operation\": \"list_upcoming_consultas_by_patient_cpf\",\n  \"cpf\": \"12345678901\"\n}",
+        "workflowId": {
+          "__rl": true,
+          "value": "c4ofciB0mUlYMpQa",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/c4ofciB0mUlYMpQa",
+          "cachedResultName": "Subworkflow - Tool da Clínica"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "exam_id": "={{\n  $json.exam_id ??\n  $json.params?.exam_id ??\n  JSON.parse($json.input || '{}').exam_id ??\n  null\n}}",
+            "patient_id_test": "={{ $('Contexto Fixo (Paciente Teste)').item.json.patient_id_test }}",
+            "medico_id_test": "={{ $('Contexto Fixo (Paciente Teste)').item.json.medico_id_test }}",
+            "operation": "={{\n  $json.operation ||\n  JSON.parse($json.input || '{}').operation ||\n  $('Contexto Fixo (Paciente Teste)').item.json.default_operation_test ||\n  'get_patient_by_cpf'\n}}",
+            "cpf": "={{\n  $json.cpf ||\n  $json.params?.cpf ||\n  JSON.parse($json.input || '{}').cpf ||\n  $('Contexto Fixo (Paciente Teste)').item.json.patient_cpf_test\n}}",
+            "date": "={{\n  $json.date ||\n  $json.params?.date ||\n  JSON.parse($json.input || '{}').date ||\n  new Date().toISOString().slice(0,10)\n}}",
+            "sessionId": "={{ $json.sessionId || $json.toolCallId || null }}",
+            "patient_cpf_test": "={{ $('Contexto Fixo (Paciente Teste)').item.json.patient_cpf_test }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "operation",
+              "displayName": "operation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cpf",
+              "displayName": "cpf",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "exam_id",
+              "displayName": "exam_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "sessionId",
+              "displayName": "sessionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "patient_cpf_test",
+              "displayName": "patient_cpf_test",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "patient_id_test",
+              "displayName": "patient_id_test",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "medico_id_test",
+              "displayName": "medico_id_test",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -1328
+      ],
+      "id": "cc82df5a-a214-49c7-8dfd-c693dfe4b74d",
+      "name": "Clínica (DB)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Mensagem Usuário').item.json.user_message }}",
+        "options": {
+          "systemMessage": "={{ $('Get configurações').item.json.prompt_base }}\n\n---\nPACIENTE FIXO TESTE (SEMPRE USAR PARA INFORMAÇÕES DA INTEGRAÇÃO AO BANCO DE DADOS)\n\nExiste apenas UM paciente válido no sistema:\n\nDados do prontuário:\n- ID: {{ $json.patient_id_test }}\n- Nome: Maria Fernanda Silva\n- CPF: {{ $json.patient_cpf_test }}\n- ID Médico:{{ $json.medico_id_test }}\n- Operação Default: {{ $json.default_operation_test }}\n\nRegras para respostas integradas ao banco:\n\n1. Se o nome informado na pergunta for DIFERENTE de \"Maria Fernanda Silva\":\n   - NÃO consultar o banco\n   - NÃO adaptar resposta\n   - NÃO assumir equivalência\n   - Responder: \"Não há registros para o paciente informado.\"\n\n2. Só utilizar o banco de dados se:\n   - o nome for exatamente igual\n   OU\n   - a pergunta não informar nome (usar CPF padrão automaticamente)\n\n3. Nunca substituir nomes ou inferir correspondência.\n\n---\n### REGRAS E LIMITES (Restrições éticas, operacionais e clínicas do agente):\n{{ $('Get configurações').item.json.regras }}\n\n\n---\n### Avisos e Limites Clínicos (Avisos legais e informativos apresentados ao usuário)\n\n{{ $('Get configurações').item.json.avisos_obrigatorios }}\n\n---\n\n### DIRETRIZES E SEGURANÇA\n(Fontes / Diretrizes Clínicas):\n{{ $('Get configurações').item.json.fonte_diretrizes }}\n\n# Uso de Dados e Integrações (Rastreabilidade)\nUSO DE DADOS E FERRAMENTAS:\n\nVocê pode utilizar:\n\n1. Base de conhecimento (Documentos - KB)\n2. Banco de dados clínico (Clínica - DB)\n\nREGRAS:\n\n- Use KB para diretrizes e informações gerais.\n- Use DB quando envolver:\n  - pacientes\n  - consultas\n  - exames\n  - agenda médica\n\n- Nunca invente dados.\n- Utilize no máximo 1 chamada ao DB por pergunta.\n- Após retorno, responda imediatamente.\n\nSE NÃO HOUVER RESULTADOS:\n\n- Informe ausência de registros.\n- Sugira verificação de dados (ex: data).\n\n# Formatação de Dados Clínicos\nFORMATAÇÃO DE DADOS CLÍNICOS:\n\nConsulta #id\n- Data:\n- Status:\n- Médico:\n- Motivo:\n\nExame #id\n- Nome:\n- Data:\n- Status:\n\n# Classificação Interna (Controle de Comportamento) (NÃO EXIBIR):\n\nClassifique a pergunta:\n\n1. Informativa/Educativa  \n2. Orientativa Geral  \n3. Clínica ou de Risco  \n\nUse apenas para ajustar profundidade e necessidade de alerta.\n\n---\n### IDIOMA: Sempre responder independente da pergunta no idioma: {{ $('Get configurações').item.json.idioma_padrao }}\n\n---\n### GENERALIZAÇÕES\n\n{{ $('Get configurações').item.json.permite_generalizacao == 0 \n  ? \"Não generalize respostas. Utilize apenas diretrizes oficiais.\"\n  : \"\"\n}}\n\n---\n### FALLBACK\n{{ $('Get configurações').item.json.fallback_resposta }}\n\n---\nCONTEÚDO ADICIONAL para Regras de uso das bases\n\nSe a pergunta for geral (diretrizes, normas), use a tool Documentos (KB).\n\nSe não houver identificação do paciente:\n- utilize o paciente de teste automaticamente\n\nSe houver nome informado:\n- valide o nome antes de qualquer chamada ao banco"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        -1552
+      ],
+      "id": "958bfef7-e047-4345-b2f0-9fecf9a27a68",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "123"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        -560
+      ],
+      "id": "f85d76a8-9268-48c6-9ebe-f52891cf76c2",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4-nano-2026-03-17",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4-nano-2026-03-17"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        -560
+      ],
+      "id": "c2e14a55-8d68-4738-990a-0cf33663a340",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "8Qqwjs4zHnZn0Gmw",
+          "name": "base"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"suggested_questions\": [\n    \"Qual foi a última consulta?\",\n    \"Há resultados pendentes?\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        -560
+      ],
+      "id": "77352a60-3947-43ca-907a-8568f991c94c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"Pergunta do médico: \" + $json.chatInput + \"\\n\\nResposta anterior do sistema: \" + $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Você está gerando sugestões de próximas perguntas para um médico que usa um chatbot clínico.\n\nConsidere:\n- a pergunta do usuário\n- a resposta gerada\n- o fato de que o usuário é um profissional de saúde\n- as sugestões devem ser úteis, bem curtas, clínicas e contextuais\n- não repetir a pergunta já feita\n- se a resposta estiver baseada em dado clínico estruturado, priorize exploração de histórico, conduta, resultados ou contexto relacionado\n\nRetorne EXCLUSIVAMENTE um JSON válido no formato:\n\n{\n  \"suggested_questions\": [\n    \"Pergunta 1\",\n    \"Pergunta 2\"\n  ]\n}\n\nRegras:\n- Não escreva nada fora do JSON;\n- Não use markdown (```json);\n- Gere somente 2 (duas) perguntas no máximo;\n- Perguntas devem ser clínicas e objetivas;\n- Gere sugestões curtas;\n- Cada sugestão deve ter no máximo 8 palavras;\n- Prefira linguagem objetiva, estilo botão;\n- Não escreva perguntas longas ou compostas;\n- Priorize rótulos curtos e clínicos;\n\nExemplos:\nExemplos de formato desejado:\n- \"Qual critério para DUM x USG?\"\n- \"Quando recalcular a IG?\"\n- \"Qual melhor protocolo para isso\"\n- \"Qual margem aceitável para o exame?\"\n\nATENÇÃO IMPORTANTE:\nVocê deve retornar sugestões vazias nos casos abaixo:\n\n1. Se a resposta base contiver exatamente ou semanticamente mensagens como:\n   - \"Não há registros para o paciente informado.\"\n   - \"Nenhum registro encontrado.\"\n   - \"Não encontrei registros.\"\n   então retorne obrigatoriamente:\n   {\n     \"suggested_questions\": []\n   }\n2. Se a resposta base indicar que a pergunta está fora do escopo clínico do sistema;\n3. Se a pergunta for relacionada a fonte da resposta.\n\nNestes casos, retorne EXCLUSIVAMENTE:\n\n{\n  \"suggested_questions\": []\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -336,
+        -784
+      ],
+      "id": "9b6f6d0d-352a-4803-a707-2c02ca9fdf60",
+      "name": "Gerador de Perguntas"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d45f689e-d85d-4031-84b5-3b0461dfa1f8",
+              "name": "output_agente_principal",
+              "value": "={{ $('input chat').item.json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "f8032606-c171-4ed1-9860-8ac2b0ab5635",
+              "name": "suggested_questions",
+              "value": "={{ $json.output.suggested_questions }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -784
+      ],
+      "id": "799fa84c-5e6b-4693-97a7-c5308eadeb0c",
+      "name": "Mapear output + questões"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = ($json.output_agente_principal || \"\").trim();\n\nlet suggested_questions = Array.isArray($json.suggested_questions)\n  ? [...$json.suggested_questions]\n  : [];\n\n// respostas que NÃO devem exibir sugestões\nconst blockPatterns = [\n  /não há registros para o paciente informado/i,\n  /nenhum registro encontrado/i,\n  /não encontrei registros/i,\n  /fora do escopo/i,\n  /não posso ajudar com isso/i,\n  /fonte da resposta/i,\n  /qual foi a fonte/i\n];\n\n// se a resposta principal cair em qualquer caso bloqueado, zera sugestões\nconst shouldBlockSuggestions = blockPatterns.some((pattern) =>\n  pattern.test(output)\n);\n\nif (shouldBlockSuggestions) {\n  suggested_questions = [];\n}\n\n// remove duplicadas e vazias\nsuggested_questions = [...new Set(\n  suggested_questions\n    .map(q => String(q).trim())\n    .filter(Boolean)\n)].filter(q => q !== \"Fonte utilizada\");\n\nreturn [\n  {\n    json: {\n      output,\n      suggested_questions\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -784
+      ],
+      "id": "af15065f-cf3b-46be-b1fa-0b61199085d0",
+      "name": "Formatar saída"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        512,
+        -1552
+      ],
+      "id": "04739958-228a-4f2d-b2c6-93ef8821c1da",
+      "name": "Respond to Webhook - ChatFront"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot-feedback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        -160
+      ],
+      "id": "f7b42620-9962-444a-9659-9c8ff579d416",
+      "name": "Webhook Feedback Resposta",
+      "webhookId": "8c2c7707-a5a8-4e6f-9e4f-9532a3632824"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3348e25-3696-4b48-8b18-b04b88772c42",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "31814e84-90cb-490e-acf4-4d13222e0e14",
+              "name": "messageId",
+              "value": "={{ $json.body.messageId }}",
+              "type": "string"
+            },
+            {
+              "id": "008488b7-b48e-4900-8fcd-a6eac26eddb7",
+              "name": "question",
+              "value": "={{ $json.body.question }}",
+              "type": "string"
+            },
+            {
+              "id": "c96333e1-2507-45cf-9b67-4ec57d4f73c6",
+              "name": "answer",
+              "value": "={{ $json.body.answer }}",
+              "type": "string"
+            },
+            {
+              "id": "5c3ce1a8-c66e-4143-968d-ed1c6abb0c09",
+              "name": "evaluation",
+              "value": "={{ $json.body.evaluation }}",
+              "type": "string"
+            },
+            {
+              "id": "c8cd4c4f-64ac-47b6-8f47-afdfa4f9daeb",
+              "name": "createdAt",
+              "value": "={{ $json.body.createdAt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -528,
+        -160
+      ],
+      "id": "605803b7-d9c2-4a69-a967-8a1166897312",
+      "name": "Mapear feedback"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "feedback_chatbot",
+          "mode": "list",
+          "cachedResultName": "feedback_chatbot"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "session_id",
+              "value": "={{ $json.sessionId }}"
+            },
+            {
+              "column": "message_id",
+              "value": "={{ $json.messageId }}"
+            },
+            {
+              "column": "question",
+              "value": "={{ $json.question }}"
+            },
+            {
+              "column": "answer",
+              "value": "={{ $json.answer }}"
+            },
+            {
+              "column": "evaluation",
+              "value": "={{ $json.evaluation }}"
+            },
+            {
+              "column": "created_at",
+              "value": "={{ $json.createdAt }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -336,
+        -160
+      ],
+      "id": "8df85929-39c6-4b66-85f9-b6695c6f24f4",
+      "name": "Inserir na tabela feedback_chatbot",
+      "credentials": {
+        "mySql": {
+          "id": "mFhgtVs5nk9OowZE",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Feedback de respostas\n** Se o usuário quiser qualificar a resposta recebida, ele pode clicar no 👍 para dar o feedback",
+        "height": 320,
+        "width": 816,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        -272
+      ],
+      "id": "8d733bcf-9c89-4287-b666-7732ea886301",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "👉 O ideal:\n\nValida escopo\nValida identidade\nSó então responde"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        -2208
+      ],
+      "id": "70b7a94e-0614-474c-8d02-a29cf9a4ae7f",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot-suggestions",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        -784
+      ],
+      "id": "9fb95f6c-3193-4a3c-8bc8-32dc294f245c",
+      "name": "chatbot-suggestions",
+      "webhookId": "5792ba1f-1b68-41e0-bafd-ca5e69d05c96"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        -784
+      ],
+      "id": "285873da-ea32-4035-9efd-c16421bd9ec3",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f505f217-2ca9-4c95-b3df-6e04545dfe84",
+              "name": "output",
+              "value": "={{ $json.body.output }}",
+              "type": "string"
+            },
+            {
+              "id": "6287e113-d0b4-40fa-9862-803ba37781d6",
+              "name": "chatInput",
+              "value": "={{ $json.body.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "e1e20549-219c-462d-a05f-e6e0f46ad624",
+              "name": "messageId",
+              "value": "={{ $json.body.messageId }}",
+              "type": "string"
+            },
+            {
+              "id": "390e2ec9-933f-473a-8514-d669eb4331e4",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -544,
+        -784
+      ],
+      "id": "4c77381f-b7d4-40ee-ad7c-43c2c414fc0e",
+      "name": "input chat"
+    },
+    {
+      "parameters": {
+        "content": "## Gerador de Sugestões de Perguntas\n** Baseado na resposta à pergunta do usuário, o agente de IA gera sugestões de perguntas relacionadas",
+        "height": 528,
+        "width": 1440,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -912
+      ],
+      "id": "dda52f03-ac1a-46da-81c8-f4319a7ee063",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo Principal\n**Resposta principal ao usuário",
+        "height": 640,
+        "width": 1712,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        -1664
+      ],
+      "id": "4b19a286-7489-42ea-b905-57f53368e17c",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Esta tool é responsável por informar sobre o resumo clínico da paciente",
+        "operation": "select",
+        "table": {
+          "__rl": true,
+          "value": "resumos_clinicos",
+          "mode": "list",
+          "cachedResultName": "resumos_clinicos"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "paciente_id",
+              "value": "={{ $json.patient_id_test }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySqlTool",
+      "typeVersion": 2.5,
+      "position": [
+        672,
+        -1344
+      ],
+      "id": "f029b4da-4d4a-409e-b8f7-54640eda26bb",
+      "name": "Resumo Clínico",
+      "credentials": {
+        "mySql": {
+          "id": "USLQw9kNkxrHB6Wx",
+          "name": "MySQL - Higia Clinica"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b5207c4-a710-4050-88f8-25b5cf240a84",
+              "name": "patient_cpf_test",
+              "value": 12345678901,
+              "type": "number"
+            },
+            {
+              "id": "5ab1ba33-1e14-4073-b6c1-af2319bdedbe",
+              "name": "patient_id_test",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "6c7aeaee-040f-43f0-840d-5313aa23c3cc",
+              "name": "medico_id_test",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "9f81c47c-005c-4757-92a8-b828544197ce",
+              "name": "default_operation_test",
+              "value": "get_patient_by_cpf",
+              "type": "string"
+            },
+            {
+              "id": "3af85b9f-0ef4-47ff-806a-d6e569f558a1",
+              "name": "chatInput",
+              "value": "={{ $('Mensagem Usuário').item.json.body.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        -1552
+      ],
+      "id": "328e004f-c871-4dc7-8c47-c10ea0ac9368",
+      "name": "Contexto Fixo (Paciente Teste)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Salvar arquivo no Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Combinar dados",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Mapear Dados Formulário": {
+      "main": [
+        [
+          {
+            "node": "Combinar dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar dados": {
+      "main": [
+        [
+          {
+            "node": "Mapear Dados do Formulario+Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear Dados do Formulario+Drive": {
+      "main": [
+        [
+          {
+            "node": "Inserir Dados do Documento no BD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inserir Doc": {
+      "main": [
+        [
+          {
+            "node": "Salvar arquivo no Google Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mapear Dados Formulário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Doc": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Arquivo": {
+      "main": [
+        [
+          {
+            "node": "Extrair Metadata",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extrair Metadata": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Delete a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Delete table or rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Extrair IDs do Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrair IDs do Drive": {
+      "main": [
+        [
+          {
+            "node": "Select rows from a table1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select rows from a table1": {
+      "main": [
+        [
+          {
+            "node": "Comparar Drive × MySQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comparar Drive × MySQL": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Id Doc delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Id Doc delete": {
+      "main": [
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a row": {
+      "main": [
+        []
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        []
+      ]
+    },
+    "Get configurações": {
+      "main": [
+        [
+          {
+            "node": "Contexto Fixo (Paciente Teste)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Documentos (KB)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook FrontEndChat": {
+      "main": [
+        [
+          {
+            "node": "Mensagem Usuário",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Usuário": {
+      "main": [
+        [
+          {
+            "node": "Get configurações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 6 Days": {
+      "main": [
+        [
+          {
+            "node": "Keep Supabase Instance Alive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Documentos (KB)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clínica (DB)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook - ChatFront",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Gerador de Perguntas",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gerador de Perguntas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Gerador de Perguntas",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerador de Perguntas": {
+      "main": [
+        [
+          {
+            "node": "Mapear output + questões",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear output + questões": {
+      "main": [
+        [
+          {
+            "node": "Formatar saída",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar saída": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Feedback Resposta": {
+      "main": [
+        [
+          {
+            "node": "Mapear feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear feedback": {
+      "main": [
+        [
+          {
+            "node": "Inserir na tabela feedback_chatbot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook - ChatFront": {
+      "main": [
+        []
+      ]
+    },
+    "chatbot-suggestions": {
+      "main": [
+        [
+          {
+            "node": "input chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "input chat": {
+      "main": [
+        [
+          {
+            "node": "Gerador de Perguntas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumo Clínico": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contexto Fixo (Paciente Teste)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8a73327b-cfb2-4125-ad07-f045114b6dca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0dd13791ed1aceffba8aa7318e026265c85178b6c713eb0728b8f749ecc5f9ea"
+  },
+  "id": "8sVLn63D3YntMk9h",
+  "tags": []
+}
